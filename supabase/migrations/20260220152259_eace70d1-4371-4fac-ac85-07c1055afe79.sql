@@ -1,0 +1,1 @@
+ALTER TABLE public.perfis_usuarios ADD CONSTRAINT perfis_usuarios_user_id_unique UNIQUE (user_id);

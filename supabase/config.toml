@@ -1,0 +1,22 @@
+project_id = "pjxxhpgnvmibkqxurmgq"
+
+[functions.send-message]
+verify_jwt = false
+
+[functions.fetch-contacts]
+verify_jwt = false
+
+[functions.fetch-history]
+verify_jwt = false
+
+[functions.n8n-proxy]
+verify_jwt = false
+
+[functions.manage-users]
+verify_jwt = false
+
+[functions.fetch-instances]
+verify_jwt = false
+
+[functions.fetch-media]
+verify_jwt = false

@@ -1,0 +1,1 @@
+ALTER TABLE public.bot_memoria REPLICA IDENTITY FULL;
