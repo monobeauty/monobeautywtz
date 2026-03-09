@@ -261,7 +261,7 @@ export function ChatPanel({ messages, selectedInstance, selectedContact, onLoadM
                       key={msg.id}
                       data-msg-id={msg.whatsapp_id || msg.id}
                       className={cn(
-                        "flex items-center gap-2",
+                        "flex items-center gap-2 min-w-0",
                         isOutgoing ? "justify-end" : "justify-start",
                         selectMode && "cursor-pointer",
                         isSelected && "bg-primary/5 rounded-lg -mx-2 px-2 py-0.5"
