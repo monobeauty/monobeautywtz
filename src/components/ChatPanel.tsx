@@ -275,7 +275,7 @@ export function ChatPanel({ messages, selectedInstance, selectedContact, onLoadM
                       )}
                       <div
                         className={cn(
-                          "max-w-[70%] rounded-2xl px-4 py-2.5 shadow-sm",
+                          "relative max-w-[70%] rounded-2xl px-4 py-2.5 pb-5 shadow-sm",
                           isOutgoing
                             ? "bg-chat-outgoing text-[hsl(var(--chat-outgoing-foreground))] rounded-br-md"
                             : "bg-chat-incoming rounded-bl-md"
@@ -309,18 +309,23 @@ export function ChatPanel({ messages, selectedInstance, selectedContact, onLoadM
                         {!msg.media_type && !msg.message_text && (
                           <p className="text-sm italic text-muted-foreground">[mídia não suportada]</p>
                         )}
-                        <div className={cn("flex items-center gap-1 mt-1", isOutgoing ? "justify-end" : "justify-start")}>
-                          <span className={cn("text-xs", isOutgoing ? "opacity-60" : "text-muted-foreground")}>
+                        <div className={cn(
+                          "absolute bottom-1 right-2 flex items-center gap-1",
+                        )}>
+                          <span className={cn(
+                            "text-[10px] leading-none",
+                            isOutgoing ? "text-muted-foreground/70" : "text-muted-foreground"
+                          )}>
                             {format(new Date(msg.created_at), "HH:mm")}
                           </span>
                           {msg.status === "error" || msg.status === "failed" ? (
-                            <AlertCircle className="w-3.5 h-3.5 text-destructive" />
+                            <AlertCircle className="w-3 h-3 text-destructive" />
                           ) : msg.status === "read" ? (
-                            <CheckCheck className="w-3.5 h-3.5 text-blue-500" />
+                            <CheckCheck className="w-3 h-3 text-blue-500" />
                           ) : msg.status === "delivered" ? (
-                            <CheckCheck className="w-3.5 h-3.5 opacity-60" />
+                            <CheckCheck className="w-3 h-3 opacity-60" />
                           ) : msg.status === "sent" || isOutgoing ? (
-                            <Check className="w-3.5 h-3.5 opacity-60" />
+                            <Check className="w-3 h-3 opacity-60" />
                           ) : null}
                         </div>
                       </div>
