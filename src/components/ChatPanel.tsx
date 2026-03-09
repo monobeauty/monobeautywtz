@@ -228,7 +228,7 @@ export function ChatPanel({ messages, selectedInstance, selectedContact, onLoadM
           if (viewport) scrollContainerRef.current = viewport;
         }
       }}>
-        <div className="px-6 py-6 space-y-6">
+        <div className="px-6 py-6 space-y-6 overflow-hidden">
           <div ref={topRef} className="h-1" />
 
           {loadingMore && (
