@@ -1,44 +1,70 @@
 
+## Foto real e indicador de status das instancias no menu lateral
 
-## Diagnóstico
+### O que sera feito
 
-Identifiquei dois problemas principais:
+1. **Capturar a foto de perfil da instancia na Evolution API** -- O endpoint `fetchInstances` ja retorna `profilePictureUrl` e `profileName` no objeto de cada instancia. Atualmente o edge function e o hook `useEvolutionInstances` descartam essas informacoes.
 
-### 1. RLS Policies são RESTRICTIVE (todas as tabelas)
-Todas as policies nas tabelas `messages`, `chat_status`, `bot_memoria`, `configuracoes_sistema` e `setores_atendimento` estão como **RESTRICTIVE** (`Permissive: No`). No PostgreSQL, sem nenhuma policy PERMISSIVE, o acesso é negado por padrão — mesmo que as restrictive tenham `USING (true)`. Isso explica por que os dados não carregam.
+2. **Atualizar o edge function `fetch-instances`** para incluir `profilePictureUrl` e `profileName` na resposta.
 
-### 2. Tabela `perfis_usuarios` sem INSERT policy
-O hook `useUserProfile` tenta criar o perfil se não existir, mas a tabela não tem policy de INSERT, causando falha silenciosa.
+3. **Atualizar o hook `useEvolutionInstances`** para expor um mapa de `profilePicUrl` e `profileName` por instancia.
 
----
+4. **Atualizar o `InstanceSidebar`** para:
+   - Exibir a foto real do WhatsApp da instancia usando o componente Avatar (com fallback para as iniciais caso a foto nao esteja disponivel).
+   - Corrigir a bolinha cinza: ela e o indicador de status de conexao. Quando o status e "unknown" ou nao reconhecido, fica cinza (`bg-muted-foreground/40`). Sera ajustada para ter cores mais claras e significativas.
 
-## Plano de Correção
+### O que e a bolinha cinza
 
-### Passo 1 — Corrigir RLS policies (migração SQL)
+A bolinha cinza e o indicador de status de conexao da instancia com o WhatsApp:
+- **Verde**: conectada (status "open" ou "connected")
+- **Amarela**: conectando (status "connecting")
+- **Cinza**: desconectada ou status desconhecido
 
-Dropar todas as policies RESTRICTIVE e recriar como PERMISSIVE para `authenticated`:
-
-- **messages**: SELECT, INSERT, DELETE para authenticated
-- **chat_status**: SELECT, INSERT, UPDATE, DELETE para authenticated
-- **bot_memoria**: SELECT, INSERT, UPDATE, DELETE para authenticated
-- **configuracoes_sistema**: SELECT, INSERT, UPDATE, DELETE para authenticated
-- **setores_atendimento**: SELECT, INSERT, UPDATE, DELETE para authenticated
-- **perfis_usuarios**: Adicionar INSERT e UPDATE para `auth.uid() = user_id`, e tornar o SELECT permissive
-
-### Passo 2 — Página Contatos
-
-A página `/contacts` usa `useMessages()` que depende das queries ao Supabase funcionarem. Com o RLS corrigido, os dados voltarão a carregar. Nenhuma alteração de código necessária na página em si.
-
-### Passo 3 — Chat (página Index)
-
-O chat usa `useMessages`, `useChatHistory`, `useChatStatus`, `useEvolutionContacts` — todos dependem do Supabase funcionar. Com RLS corrigido + Realtime subscription que já existe, o chat voltará a funcionar.
+Se as instancias estao funcionando normalmente, provavelmente o status retornado pela API nao esta sendo mapeado corretamente para "open"/"connected". Isso sera verificado e corrigido.
 
 ---
 
-## Resumo das Alterações
+### Detalhes tecnicos
 
-| Tipo | Escopo |
-|------|--------|
-| Migração SQL | Recriar ~20 RLS policies como PERMISSIVE para `authenticated` |
-| Código | Nenhuma alteração necessária |
+**1. Edge function `supabase/functions/fetch-instances/index.ts`**
 
+Adicionar `profilePictureUrl` e `profileName` ao objeto retornado:
+
+```typescript
+data.forEach((item: any) => {
+  const name = item.instance?.instanceName || ...;
+  const status = item.instance?.status || ...;
+  const profilePicUrl = item.instance?.profilePictureUrl || null;
+  const profileName = item.instance?.profileName || null;
+  if (name) instances.push({ name, status, profilePicUrl, profileName });
+});
+```
+
+**2. Hook `src/hooks/useEvolutionInstances.ts`**
+
+Atualizar a interface `EvolutionInstance` e expor mapas adicionais:
+
+```typescript
+export interface EvolutionInstance {
+  name: string;
+  status: string;
+  profilePicUrl: string | null;
+  profileName: string | null;
+}
+
+// Expor um mapa de profile pics
+const profilePicMap: Record<string, string | null> = {};
+instances.forEach((i) => {
+  profilePicMap[i.name] = i.profilePicUrl;
+});
+```
+
+**3. Componente `src/components/InstanceSidebar.tsx`**
+
+- Receber nova prop `instanceProfilePics` (mapa nome -> URL da foto).
+- Substituir o circulo com iniciais por um `Avatar` com `AvatarImage` (foto real) e `AvatarFallback` (iniciais como fallback).
+- Manter a bolinha de status sobreposta ao avatar.
+
+**4. Componente `src/pages/Index.tsx`**
+
+- Passar o mapa `profilePicMap` do hook para o `InstanceSidebar`.
