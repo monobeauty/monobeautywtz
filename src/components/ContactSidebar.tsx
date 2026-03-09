@@ -385,16 +385,16 @@ export function ContactSidebar({
                     {contact.pushName.slice(0, 2).toUpperCase()}
                   </span>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium truncate">{contact.pushName}</span>
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                <div className="flex flex-col w-full overflow-hidden">
+                  <div className="flex justify-between items-center w-full">
+                    <span className="font-medium truncate pr-2">{contact.pushName}</span>
+                    <div className="flex items-center gap-1.5 shrink-0">
                       {contact.unreadCount > 0 && (
                         <span className="text-xs bg-primary text-primary-foreground min-w-[18px] h-[18px] flex items-center justify-center px-1 rounded-full font-bold">
                           {contact.unreadCount}
                         </span>
                       )}
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-[11px] text-muted-foreground shrink-0">
                         {new Date(contact.lastTimestamp).getTime() > 0
                           ? format(new Date(contact.lastTimestamp), "HH:mm")
                           : ""}
@@ -425,10 +425,12 @@ export function ContactSidebar({
                       </span>
                     ) : null;
                   })()}
-                  <p className={cn(
-                    "text-xs truncate",
-                    contact.unreadCount > 0 ? "text-foreground font-medium" : "text-muted-foreground"
-                  )}>{contact.lastMessage}</p>
+                  <div className="w-full">
+                    <p className={cn(
+                      "text-sm truncate w-full",
+                      contact.unreadCount > 0 ? "text-foreground font-medium" : "text-muted-foreground"
+                    )}>{contact.lastMessage}</p>
+                  </div>
                 </div>
               </button>
               {activeTab === "closed" && onReopenChat && (
